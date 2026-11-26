@@ -37,3 +37,11 @@ Data were transcribed using the numeric workbook columns for normal age by sex, 
 ### Simplified comparison view
 
 The timeline opens with Hungary, the United States and Japan in the male selection. The chart is followed by a country legend and a year-selectable table. The table defaults to the latest year with a comparable pair in the current selection. Its difference column uses the same country, sex and year. Missing source values remain blank, and a population-wide life expectancy is never subtracted from a sex-specific retirement age. Source, range, extra metrics and export controls are grouped under the expandable chart settings.
+
+### Statutory pension ages
+
+The main view uses a separate statutory indicator for Hungary, the US and Japan. The OECD full-career model remains available as a separately named indicator. In Hungary the general age was 62 in 2010 and 65 in 2024 for both sexes. The OECD 2010 archive includes advance-eligibility figures and the OECD 2024 female model reaches Hungary’s 40-year preferential entitlement before 65. These values do not measure the same rule.
+
+- Hungary uses the general employee threshold for 1955–1979, then the unified general rules. Transition years use the birth cohorts reaching general age in that calendar year. Years without an eligible new cohort are gaps. The October 1954 reform is first shown for the full reference year 1955. [Historical reform account](https://epa.oszk.hu/05300/05334/00083/pdf/EPA05334_demografia_1983_2-3.pdf) · [Transition table](https://real.mtak.hu/24515/1/06_Cseres_Gergely_Zsombor_u.pdf) · [Law §18](https://njt.jog.gov.hu/jogszabaly/1997-81-00-00)
+- The US uses SSA’s unreduced retired-worker benefit and the highest full retirement age attained by a cohort in the calendar year. Multiple rules can coexist in a transition year. In 2024 the highest was 66 years and 8 months, for some people born in 1958. [SSA Table 2.A17.1](https://www.ssa.gov/policy/docs/statcomps/supplement/2024/2a8-2a19.html#a17.1)
+- Japan uses the old-age Basic Pension age of 65 from the 1986 reform. The earlier period and special Employees’ Pension benefits are outside this series. [Japan Pension Service](https://www.nenkin.go.jp/international/english/japanese-system/benefit/oldage_basic.html) · [Statistics Bureau](https://www.stat.go.jp/english/data/nenkan/1431-23e.html)

@@ -40,6 +40,8 @@ test.beforeEach(async ({ page }) => {
   await page.locator('[data-c=USA]').click();
   await page.locator('#sex').selectOption('T');
   await page.locator('#chartSettings > summary').click();
+  await selectMetric(page, 'pra', false);
+  await selectMetric(page, 'nra', true);
   await page.locator('#zoom').click();
   await page.locator('#history').selectOption('wb');
 });
@@ -404,7 +406,8 @@ test('chart-first view compares the selected year and sex without filling gaps',
   await expect(page.locator('#sex')).toHaveValue('M');
   const rows = page.locator('#comparisonRows tr');
   await expect(rows).toHaveCount(3);
-  await expect(page.locator('#comparisonYear')).toHaveValue('2022');
+  await expect(page.locator('#comparisonYear')).toHaveValue('2023');
+  await page.locator('#comparisonYear').selectOption('2022');
   const hungary = page.locator('[data-comparison-country=HUN] td');
   await expect(hungary).toHaveText(['72,8', '65,0', '7,8']);
   await page.locator('#comparisonYear').selectOption('1950');
@@ -413,9 +416,29 @@ test('chart-first view compares the selected year and sex without filling gaps',
   await expect(page.locator('#comparisonYear')).toHaveValue('1950');
   await expect(hungary).toHaveText(['64,3', '—', '—']);
   await page.locator('#comparisonYear').selectOption('2022');
-  await expect(hungary).toHaveText(['79,5', '62,0', '17,5']);
+  await expect(hungary).toHaveText(['79,5', '65,0', '14,5']);
   await page.locator('#sex').selectOption('T');
   await expect(hungary.nth(1)).toContainText('Férfi: 65,0');
-  await expect(hungary.nth(1)).toContainText('Nő: 62,0');
+  await expect(hungary.nth(1)).toContainText('Nő: 65,0');
   await expect(hungary.nth(2)).toHaveText('—');
+});
+
+test('statutory ages and the OECD model stay distinct in the default comparison', async ({page}) => {
+  await page.reload();
+  const hu = page.locator('[data-comparison-country=HUN] td');
+  for (const sex of ['M', 'F']) {
+    await page.locator('#sex').selectOption(sex);
+    await expect(point(page, 'HUN', 'pra', sex, 2010)).toHaveAttribute('data-value','62');
+    await expect(point(page, 'HUN', 'pra', sex, 2024)).toHaveAttribute('data-value','65');
+  }
+  await expect(point(page, 'HUN', 'nra', 'F', 2024)).toHaveCount(0);
+  await expect(point(page, 'JPN', 'pra', 'F', 1986)).toHaveAttribute('data-value','65');
+  await expect(point(page, 'USA', 'pra', 'F', 2024).locator('title')).toContainText('66 év 8 hónap');
+  await page.locator('#chartSettings > summary').click();
+  await page.locator('#history').selectOption('wb');
+  await page.locator('#comparisonYear').selectOption('2024');
+  await expect(hu).toHaveText(['79,9', '65,0', '14,9']);
+  await selectMetric(page,'pra',false);
+  await selectMetric(page,'nra',true);
+  await expect(hu).toHaveText(['79,9', '62,0', '17,9']);
 });
