@@ -35,6 +35,11 @@ test.beforeEach(async ({ page }) => {
   });
   await page.route('https://**', route => route.abort());
   await page.goto('/');
+  await page.locator('#countryPicker summary').click();
+  await page.locator('[data-c=AUT]').click();
+  await page.locator('[data-c=USA]').click();
+  await page.locator('#sex').selectOption('T');
+  await page.locator('#chartSettings > summary').click();
   await page.locator('#zoom').click();
   await page.locator('#history').selectOption('wb');
 });
@@ -54,8 +59,10 @@ test('offline file opens and renders without any network requests', async ({ pag
   await context.setOffline(true);
   await page.goto(pathToFileURL(resolve('index.html')).href);
   await expect(page.locator('#start')).toHaveValue('1949');
-  await expect(point(page, 'HUN', 'le', 'T', 1950)).toHaveAttribute('data-value', '62.1384');
+  await expect(point(page, 'HUN', 'le', 'M', 1950)).toHaveAttribute('data-value', '59.9299');
+  await page.locator('#chartSettings > summary').click();
   await page.locator('#history').selectOption('wb');
+  await page.locator('#sex').selectOption('T');
   await expect(point(page, 'HUN', 'le', 'T', 2024)).toHaveAttribute('data-value', '76.7243902439025');
   await page.locator('#sex').selectOption('F');
   await expect(point(page, 'JPN', 'le', 'F', 2024)).toHaveAttribute('data-value', '87.13');
@@ -388,4 +395,27 @@ test('the long historical view separates the archived and modern retirement-age 
   const csv = await exportCSV(page, '#csv');
   expect(csv).toContain('"HUN","nra","M","1949","60","https://doi.org/10.1787/888932372089"');
   expect(csv).not.toContain('"HUN","nra","M","2014"');
+});
+
+test('chart-first view compares the selected year and sex without filling gaps', async ({ page }) => {
+  await page.reload();
+  await expect(page.locator('#chartSettings')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#countryPicker')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#sex')).toHaveValue('M');
+  const rows = page.locator('#comparisonRows tr');
+  await expect(rows).toHaveCount(3);
+  await expect(page.locator('#comparisonYear')).toHaveValue('2022');
+  const hungary = page.locator('[data-comparison-country=HUN] td');
+  await expect(hungary).toHaveText(['72,8', '65,0', '7,8']);
+  await page.locator('#comparisonYear').selectOption('1950');
+  await expect(hungary).toHaveText(['59,9', '—', '—']);
+  await page.locator('#sex').selectOption('F');
+  await expect(page.locator('#comparisonYear')).toHaveValue('1950');
+  await expect(hungary).toHaveText(['64,3', '—', '—']);
+  await page.locator('#comparisonYear').selectOption('2022');
+  await expect(hungary).toHaveText(['79,5', '62,0', '17,5']);
+  await page.locator('#sex').selectOption('T');
+  await expect(hungary.nth(1)).toContainText('Férfi: 65,0');
+  await expect(hungary.nth(1)).toContainText('Nő: 62,0');
+  await expect(hungary.nth(2)).toHaveText('—');
 });
