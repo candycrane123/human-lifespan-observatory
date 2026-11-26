@@ -311,3 +311,29 @@ test('rankings do not fill gaps with other reference years or WDI releases', asy
   await expect(page.locator('[data-rank-country="AUT"]')).toContainText('81,0');
   await expect(page.locator('[data-rank-country="HUN"]')).toHaveCount(0);
 });
+
+test('overlapping 2024 pension points separate without changing their year or age', async ({ page, isMobile }) => {
+  await page.locator('[data-c=DEU]').click();
+  const coincident = page.locator('#plot circle[data-metric=nra][data-year="2024"][data-value="65"]');
+  await expect(coincident).toHaveCount(4);
+  const centers = await coincident.evaluateAll(nodes => nodes.map(node => [node.getAttribute('cx'), node.getAttribute('cy')]));
+  expect(new Set(centers.map(([x]) => x)).size).toBe(4);
+  expect(new Set(centers.map(([,y]) => y)).size).toBe(1);
+  await expect(page.locator('#plot text').getByText('2024', { exact: true })).toBeVisible();
+  const readout = page.getByRole('table', { name: 'OECD normál nyugdíjkorhatár' });
+  await expect(readout.locator('tbody tr')).toHaveCount(8);
+  await expect(readout.locator('tr[data-country=JPN][data-sex=F]')).toContainText('65,0 év');
+  if (!isMobile) {
+    await point(page, 'JPN', 'nra', 'F', 2024).hover();
+    await expect(page.locator('#tip')).toContainText('2024');
+    await expect(page.locator('#tip')).toContainText('Japán');
+  }
+  await page.locator('#sex').selectOption('F');
+  await expect(readout.locator('tbody tr')).toHaveCount(4);
+  await expect(readout.locator('tr[data-country=HUN]')).toContainText('62,0 év');
+  await setYear(page, '#end', '2023');
+  await expect(page.locator('#plot circle[data-metric=nra]')).toHaveCount(0);
+  await expect(page.locator('#retirementPoints')).toContainText('nincs kirajzolható korhatárpont');
+  await selectMetric(page, 'nra', false);
+  await expect(page.locator('#retirementPoints')).toBeHidden();
+});
