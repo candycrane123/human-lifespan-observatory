@@ -1,0 +1,68 @@
+name: Browser regression
+
+on:
+  pull_request:
+  push:
+    paths:
+      - index.html
+      - package.json
+      - package-lock.json
+      - playwright.config.cjs
+      - tests/**
+      - .github/workflows/playwright.yml
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      REVIEW_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out the exact review commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.REVIEW_SHA }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Prepare the portable review copy
+        run: |
+          test "$(git rev-parse HEAD)" = "$REVIEW_SHA"
+          mkdir review-copy
+          git show "$REVIEW_SHA:index.html" > review-copy/index.html
+          cmp index.html review-copy/index.html
+          (cd review-copy && sha256sum index.html > SHA256SUMS)
+          printf '%s\n' "$REVIEW_SHA" > review-copy/COMMIT.txt
+          printf 'Reviewed commit: `%s`\n' "$REVIEW_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm test -- --workers=2
+      - name: Upload the HTML report
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report-${{ github.run_attempt }}-${{ env.REVIEW_SHA }}
+          path: playwright-report/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: failure-screenshots-${{ github.run_attempt }}-${{ env.REVIEW_SHA }}
+          path: test-results/**/*.png
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload the portable review copy
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-review-${{ github.run_attempt }}-${{ env.REVIEW_SHA }}
+          path: review-copy/
+          retention-days: 14
+          if-no-files-found: warn
