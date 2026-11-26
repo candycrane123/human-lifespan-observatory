@@ -1,0 +1,13 @@
+{
+  "name": "human-lifespan-observatory",
+  "version": "0.1.0",
+  "description": "Az emberi életidő atlasza — magyar nyelvű demográfiai kutatási prototípus.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  },
+  "private": true
+}

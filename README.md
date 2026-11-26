@@ -2,13 +2,20 @@
 
 Az emberi életidő atlasza — magyar nyelvű demográfiai kutatási prototípus.
 
-## Start
-Open `index.html` in a browser, or serve the directory using `python3 -m http.server 8000` and open `http://localhost:8000/`. This is the original, unverified baseline; network-enhanced functions may fail. No local installation is needed for the direct HTML version. For cloud development, use Codex to execute the tests and provide a runnable artifact.
+## Indítás
 
-## Files
-- `index.html`: unchanged original implementation, renamed for standard web entry point.
-- `PRODUCT_SPEC.md`: verbatim original uploaded product prompt; it ends at an incomplete heading.
-- `AGENTS.md`: standing engineering and scientific rules distilled from the conversation.
-- `RECOVERY.md`: first release assignment and handover, distilled from the previous recovery prompt.
+Nyisd meg az [index.html](index.html) fájlt Chromium-alapú böngészőben, vagy futtasd a `python3 -m http.server 8000` parancsot ebben a könyvtárban, majd nyisd meg a [helyi alkalmazást](http://localhost:8000/). A beépített összehasonlításokhoz nincs szükség internetkapcsolatra vagy telepítésre.
 
-Start with Release 0.1 only. No validated release or completed migration is claimed by this package.
+A 0.1-es kiadás beépített Világbank-idősorai 1960 és 2024 között mutatják a születéskori periódus-élettartamot összesített, férfi- és női bontásban. Az adatok és módszertan nézetben választható az online frissítés, a CSV-import és az export. Az online és importált adatok az oldal újratöltéséig maradnak meg.
+
+## Böngészős regressziós tesztek
+
+Node.js 20 vagy újabb és Python 3 szükséges. A tesztek önállóan indítják a helyi szervert a 8011-es porton.
+
+```sh
+npm ci
+npx playwright install chromium
+npm test -- --workers=2
+```
+
+A [kiadási ellenőrzés](RELEASE_0.1.md) tartalmazza a hibajegyzéket, a mérési eredményeket, a forrásellenőrzést és a korlátokat. A [RECOVERY.md](RECOVERY.md) rögzíti a kiadási feladatot, a [PRODUCT_SPEC.md](PRODUCT_SPEC.md) az archivált termékleírást.
