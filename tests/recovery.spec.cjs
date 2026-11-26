@@ -442,3 +442,31 @@ test('statutory ages and the OECD model stay distinct in the default comparison'
   await selectMetric(page,'nra',true);
   await expect(hu).toHaveText(['79,9', '62,0', '17,9']);
 });
+
+test('all sixteen countries have locally sourced statutory rules in 2024', async ({ page }) => {
+  await page.reload();
+  await page.locator('#countryPicker summary').click();
+  const male = {
+    AUT:65, CHE:65, CHN:60, DEU:66, DNK:67, ESP:66.5, FIN:65, FRA:62.5,
+    GBR:66, HUN:65, ITA:67, JPN:65, KOR:63, NLD:67, SWE:66, USA:66+8/12,
+  };
+  for(const code of Object.keys(male).filter(code=>!['HUN','USA','JPN'].includes(code))){
+    await page.locator(`[data-c=${code}]`).click();
+  }
+  for(const [sex,expected] of [['M',male],['F',{...male,AUT:60.5,CHE:64,CHN:50}]]){
+    await page.locator('#sex').selectOption(sex);
+    await expect(page.locator(`#plot circle[data-metric=pra][data-sex=${sex}][data-year="2024"]`)).toHaveCount(16);
+    for(const [country,value] of Object.entries(expected)){
+      expect(Number(await point(page,country,'pra',sex,2024).getAttribute('data-value'))).toBeCloseTo(value,8);
+    }
+  }
+  await expect(point(page,'CHE','pra','F',1964)).toHaveAttribute('data-value','62');
+  await expect(point(page,'DNK','pra','F',2003)).toHaveAttribute('data-value','67');
+  await expect(point(page,'DNK','pra','F',2004)).toHaveCount(0);
+  await expect(point(page,'DNK','pra','F',2005)).toHaveAttribute('data-value','65');
+  await expect(point(page,'ITA','pra','F',2015)).toHaveAttribute('data-value','63.75');
+  await expect(point(page,'GBR','pra','F',2017).locator('title')).toContainText('64 év 3 hónap');
+  await expect(point(page,'SWE','pra','F',2023)).toHaveCount(0);
+  await expect(point(page,'KOR','pra','F',2023)).toHaveCount(0);
+  await expect(point(page,'NLD','pra','F',2023).locator('title')).toContainText('66 év 10 hónap');
+});

@@ -32,3 +32,5 @@ npm test -- --workers=2
 ```
 
 A [0.1.1 kiadási jegyzet](RELEASE_0.1.1.md) ismerteti az előnézeti lehetőségeket és a TLS-vizsgálatot. A [0.1 kiadási ellenőrzés](RELEASE_0.1.md) tartalmazza a korábbi hibajegyzéket, forrásellenőrzést és lefedettségi korlátokat.
+
+A helyi nyelvű elsődleges források és az országonkénti lefedettség a [nemzeti korhatárok jegyzékében](PENSION_SOURCES.md) találhatók.
