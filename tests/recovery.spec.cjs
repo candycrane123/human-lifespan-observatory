@@ -35,6 +35,8 @@ test.beforeEach(async ({ page }) => {
   });
   await page.route('https://**', route => route.abort());
   await page.goto('/');
+  await page.locator('#zoom').click();
+  await page.locator('#history').selectOption('wb');
 });
 
 test.afterEach(async ({ page }) => {
@@ -51,6 +53,9 @@ test('offline file opens and renders without any network requests', async ({ pag
   });
   await context.setOffline(true);
   await page.goto(pathToFileURL(resolve('index.html')).href);
+  await expect(page.locator('#start')).toHaveValue('1949');
+  await expect(point(page, 'HUN', 'le', 'T', 1950)).toHaveAttribute('data-value', '62.1384');
+  await page.locator('#history').selectOption('wb');
   await expect(point(page, 'HUN', 'le', 'T', 2024)).toHaveAttribute('data-value', '76.7243902439025');
   await page.locator('#sex').selectOption('F');
   await expect(point(page, 'JPN', 'le', 'F', 2024)).toHaveAttribute('data-value', '87.13');
@@ -231,7 +236,7 @@ test('World Bank refresh is atomic and uses a separate source', async ({ page })
   await page.locator('#wbLoad').click();
   await expect(page.locator('#loadStatus')).toContainText('Nem sikerült betölteni');
   await tab(page, 0);
-  await expect(page.locator('#history option')).toHaveCount(1);
+  await expect(page.locator('#history option')).toHaveCount(2);
   rejectIndicator = false;
   await tab(page, 9);
   await page.locator('#wbLoad').click();
@@ -313,6 +318,7 @@ test('rankings do not fill gaps with other reference years or WDI releases', asy
 });
 
 test('overlapping 2024 pension points separate without changing their year or age', async ({ page, isMobile }) => {
+  await page.locator('#compareRange').click();
   await page.locator('[data-c=DEU]').click();
   const coincident = page.locator('#plot circle[data-metric=nra][data-year="2024"][data-value="65"]');
   await expect(coincident).toHaveCount(4);
@@ -333,6 +339,7 @@ test('overlapping 2024 pension points separate without changing their year or ag
   await page.getByText('Pontos korhatárok évenként', { exact: true }).click();
   await expect(readout.locator('tbody tr')).toHaveCount(16);
   await expect(readout.locator('tr[data-country=HUN]').filter({hasText:'2024'})).toContainText('62,0 év');
+  await setYear(page, '#start', '2011');
   await setYear(page, '#end', '2017');
   await expect(page.locator('#plot circle[data-metric=nra]')).toHaveCount(0);
   await expect(page.locator('#retirementPoints')).toContainText('nincs kirajzolható korhatárpont');
@@ -357,4 +364,28 @@ test('retirement age and life expectancy share a timeline with sourced OECD snap
   const csv = await exportCSV(page, '#csv');
   expect(csv).toContain('"HUN","nra","M","2020","64.5","https://stat.link/kftyqv"');
   expect(csv).not.toContain('"HUN","nra","M","2019"');
+});
+
+test('the long historical view separates the archived and modern retirement-age models', async ({ page }) => {
+  await page.locator('#longHistory').click();
+  await page.locator('#sex').selectOption('M');
+  await page.locator('[data-c=DEU]').click();
+  await expect(page.locator('#start')).toHaveValue('1949');
+  await expect(page.locator('#history')).toHaveValue('wppOffline');
+  await expect(point(page, 'HUN', 'le', 'M', 1950)).toHaveAttribute('data-value', '59.9299');
+  await expect(point(page, 'HUN', 'le', 'M', 2024)).toHaveCount(0);
+  await expect(point(page, 'HUN', 'nra', 'M', 1949)).toHaveAttribute('data-value', '60');
+  await expect(point(page, 'HUN', 'nra', 'M', 1950)).toHaveCount(0);
+  await expect(point(page, 'HUN', 'nra', 'M', 2014)).toHaveCount(0);
+  await expect(point(page, 'DEU', 'nra', 'M', 2002)).toHaveCount(0);
+  const lines = page.locator('#plot polyline[data-metric=nra][data-country=HUN]');
+  await expect(lines).toHaveCount(2);
+  const archive = (await lines.and(page.locator('[data-method=archive]')).getAttribute('points')).split(' ');
+  const modern = (await lines.and(page.locator('[data-method=modern]')).getAttribute('points')).split(' ');
+  expect(archive).toHaveLength(9);
+  expect(modern).toHaveLength(4);
+  expect(Number(archive.at(-1).split(',')[0])).toBeLessThan(Number(modern[0].split(',')[0]));
+  const csv = await exportCSV(page, '#csv');
+  expect(csv).toContain('"HUN","nra","M","1949","60","https://doi.org/10.1787/888932372089"');
+  expect(csv).not.toContain('"HUN","nra","M","2014"');
 });
