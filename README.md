@@ -12,6 +12,7 @@ Az emberi életidő atlasza — magyar nyelvű demográfiai kutatási prototípu
 ### Átvételi ellenőrzőlista
 
 - [ ] Az Idővonalon add hozzá Németországot. A születéskori élettartam mind a négy országnál látszik összesített, férfi és női bontásban.
+- [ ] Válaszd a **Közös időszak: 2018–2024** gombot. A folytonos várhatóélettartam-vonal mellett szaggatott korhatárvonal jelenik meg. Magyarország férfi korhatárpontjai 63,5 (2018), 64,5 (2020), 65 (2022) és 65 év (2024).
 - [ ] Állítsd az időszakot 1990–2000-re, majd válts mutatót. A grafikon és az adatlefedettség felirata követi a beállításokat.
 - [ ] Az Egyenlőtlenségek nézetben válts 2024-ről 1990-re. A rangsor a kiválasztott év országadatait mutatja.
 - [ ] Válaszd a születéskori HLY-t női bontásban. Az Eurostat- és a KSH-forrás külön választható. A csak magyar KSH-sor esetén a nézet jelzi, hogy nincs elég összehasonlítható ország.

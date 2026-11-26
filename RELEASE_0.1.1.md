@@ -15,3 +15,15 @@ The original HLY ranking was reproduced in Chromium. It ranked Hungary’s 2025 
 ## TLS investigation
 
 With verification enabled, command-line HTTPS to both upstream hosts succeeded against the system CA bundle. Both connections presented a leaf for the requested host issued by this environment’s managed HTTPS proxy. The previous Playwright Chromium browser reported `ERR_CERT_AUTHORITY_INVALID` on both hosts. This points to a proxy CA trust difference between the browser and system clients in this managed environment. Production browsers still need normal endpoint trust and CORS support. Keep TLS verification enabled. A managed browser that must use this proxy requires the administrator-provisioned CA in its supported browser trust store. The automated CI suite intercepts external requests with fixtures to keep regressions deterministic.
+
+
+## Historical retirement-age comparison
+
+The shared chart compares WDI period life expectancy at birth with OECD normal retirement ages for a full, uninterrupted career starting at 22. The four pension reference years are 2018, 2020, 2022 and 2024 for 15 countries. The dashed line links published snapshots. There are no intervening annual observations or projections in that series. Earlier OECD publications using career entry at age 20 were excluded. The chart's difference between the two measures does not measure expected years in retirement.
+
+Data were transcribed using the numeric workbook columns for normal age by sex, excluding effective exit age and future pension columns. The 2024 values use the OECD full-career model edition already bundled with the application. The OECD aggregate remains a 2024 point.
+
+- 2018 — OECD Pensions at a Glance 2019, Figure 4.4, `data` sheet, columns C (women) and E (men). [Workbook](https://doi.org/10.1787/888934041326)
+- 2020 — OECD Pensions at a Glance 2021, Figure 6.14, `Data` sheet, columns D (men) and G (women). [Workbook](https://stat.link/kftyqv)
+- 2022 — OECD Pensions at a Glance 2023, Figure 6.13, `Data` sheet, columns D (men) and G (women). [Workbook](https://stat.link/9zyo7u)
+- 2024 — OECD Pensions at a Glance 2025, current retirement ages and OECD Data Explorer measure CRPLF22. [OECD publication](https://www.oecd.org/en/publications/pensions-at-a-glance-2025_e40274c1-en/full-report/current-retirement-ages_0f63b747.html)

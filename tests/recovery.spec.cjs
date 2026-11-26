@@ -320,20 +320,41 @@ test('overlapping 2024 pension points separate without changing their year or ag
   expect(new Set(centers.map(([x]) => x)).size).toBe(4);
   expect(new Set(centers.map(([,y]) => y)).size).toBe(1);
   await expect(page.locator('#plot text').getByText('2024', { exact: true })).toBeVisible();
+  await page.getByText('Pontos korhatárok évenként', { exact: true }).click();
   const readout = page.getByRole('table', { name: 'OECD normál nyugdíjkorhatár' });
-  await expect(readout.locator('tbody tr')).toHaveCount(8);
-  await expect(readout.locator('tr[data-country=JPN][data-sex=F]')).toContainText('65,0 év');
+  await expect(readout.locator('tbody tr')).toHaveCount(32);
+  await expect(readout.locator('tr[data-country=JPN][data-sex=F]').filter({hasText:'2024'})).toContainText('65,0 év');
   if (!isMobile) {
     await point(page, 'JPN', 'nra', 'F', 2024).hover();
     await expect(page.locator('#tip')).toContainText('2024');
     await expect(page.locator('#tip')).toContainText('Japán');
   }
   await page.locator('#sex').selectOption('F');
-  await expect(readout.locator('tbody tr')).toHaveCount(4);
-  await expect(readout.locator('tr[data-country=HUN]')).toContainText('62,0 év');
-  await setYear(page, '#end', '2023');
+  await page.getByText('Pontos korhatárok évenként', { exact: true }).click();
+  await expect(readout.locator('tbody tr')).toHaveCount(16);
+  await expect(readout.locator('tr[data-country=HUN]').filter({hasText:'2024'})).toContainText('62,0 év');
+  await setYear(page, '#end', '2017');
   await expect(page.locator('#plot circle[data-metric=nra]')).toHaveCount(0);
   await expect(page.locator('#retirementPoints')).toContainText('nincs kirajzolható korhatárpont');
   await selectMetric(page, 'nra', false);
   await expect(page.locator('#retirementPoints')).toBeHidden();
+});
+
+test('retirement age and life expectancy share a timeline with sourced OECD snapshots', async ({ page }) => {
+  await page.locator('#compareRange').click();
+  await expect(page.locator('#start')).toHaveValue('2018');
+  await expect(page.locator('#end')).toHaveValue('2024');
+  await page.locator('#sex').selectOption('M');
+  const line = page.locator('#plot polyline[data-country=HUN][data-metric=nra][data-sex=M]');
+  await expect(line).toHaveAttribute('stroke-dasharray', '7 4');
+  expect((await line.getAttribute('points')).split(' ')).toHaveLength(4);
+  await expect(page.locator('#plot polyline[data-country=HUN][data-metric=le][data-sex=M]')).toBeVisible();
+  for (const [year, value] of [[2018, '63.5'], [2020, '64.5'], [2022, '65'], [2024, '65']]) {
+    await expect(point(page, 'HUN', 'nra', 'M', year)).toHaveAttribute('data-value', value);
+  }
+  await expect(point(page, 'HUN', 'nra', 'M', 2019)).toHaveCount(0);
+  await expect(point(page, 'HUN', 'le', 'M', 2019)).toHaveCount(1);
+  const csv = await exportCSV(page, '#csv');
+  expect(csv).toContain('"HUN","nra","M","2020","64.5","https://stat.link/kftyqv"');
+  expect(csv).not.toContain('"HUN","nra","M","2019"');
 });
