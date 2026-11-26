@@ -261,3 +261,53 @@ test('desktop chart tooltip and pan use the rendered year scale', async ({ page,
   await expect(point(page, 'HUN', 'le', 'T', 2007)).toHaveCount(0);
   await expect(point(page, 'HUN', 'le', 'T', 2024)).toHaveAttribute('data-value', '76.7243902439025');
 });
+
+test('country rankings use one reference year and exclude aggregates', async ({ page }) => {
+  await tab(page, 6);
+  await expect(page.locator('#rankYear')).toHaveValue('2024');
+  const ranked = page.locator('[data-rank-country]');
+  await expect(ranked).toHaveCount(16);
+  await expect(ranked.first()).toHaveAttribute('data-rank-country', 'CHE');
+  await expect(page.locator('[data-rank-country="JPN"]')).toContainText('84,0');
+  await page.locator('#rankYear').selectOption('1990');
+  await expect(ranked).toHaveCount(16);
+  await expect(page.locator('[data-rank-country][data-year="1990"]')).toHaveCount(16);
+  await expect(page.locator('[data-rank-country="HUN"]')).toContainText('69,3');
+  await expect(page.locator('[data-rank-country="WLD"]')).toHaveCount(0);
+});
+
+test('rankings keep distinct HLY definitions and unverified imports apart', async ({ page }) => {
+  await tab(page, 9);
+  await importCSV(page, columns+'ZZZ,hly,F,2024,100,https://example.org,ismeretlen módszer\n');
+  await expect(page.locator('#importStatus')).toContainText('1 importált');
+  await tab(page, 6);
+  await page.locator('#rank').selectOption('hly');
+  await page.locator('#sex').selectOption('F');
+  await expect(page.locator('#rankSource')).toHaveValue('health');
+  await page.locator('#rankSource').selectOption('hly');
+  await expect(page.locator('#ranking')).toContainText('nincs legalább két összehasonlítható ország');
+  await page.locator('#rankSource').selectOption('health');
+  await expect(page.locator('#rankYear')).toHaveValue('2024');
+  await expect(page.locator('[data-rank-country][data-source="health"]')).toHaveCount(10);
+  await expect(page.locator('[data-rank-country="AUT"]')).toContainText('60,6');
+  await expect(page.locator('[data-rank-country="HUN"], [data-rank-country="ZZZ"]')).toHaveCount(0);
+});
+
+test('rankings do not fill gaps with other reference years or WDI releases', async ({ page }) => {
+  await page.route('https://api.worldbank.org/**', route => {
+    const code = new URL(route.request().url()).pathname.split('/').at(-1);
+    const rows = [['HUN', '2024', 77], ['AUT', '2023', 81], ['JPN', '2023', 84]];
+    return route.fulfill({ json: [{ pages: 1 }, code === 'SP.DYN.LE00.IN' ? rows.map(([countryiso3code, date, value]) =>
+      ({ countryiso3code, date, value, indicator: { id: code } })) : []] });
+  });
+  await tab(page, 9);
+  await page.locator('#wbLoad').click();
+  await expect(page.locator('#loadStatus')).toContainText('3 új rekord');
+  await tab(page, 6);
+  await page.locator('#rankSource').selectOption('wb-live');
+  await expect(page.locator('#ranking')).toContainText('nincs legalább két összehasonlítható ország');
+  await page.locator('#rankYear').selectOption('2023');
+  await expect(page.locator('[data-rank-country][data-source="wb-live"][data-year="2023"]')).toHaveCount(2);
+  await expect(page.locator('[data-rank-country="AUT"]')).toContainText('81,0');
+  await expect(page.locator('[data-rank-country="HUN"]')).toHaveCount(0);
+});

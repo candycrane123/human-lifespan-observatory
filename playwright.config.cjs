@@ -2,7 +2,8 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
-  use: { baseURL: 'http://127.0.0.1:8011' },
+  reporter: [['list'], ['html', { open: 'never' }]],
+  use: { baseURL: 'http://127.0.0.1:8011', screenshot: 'only-on-failure' },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'], defaultBrowserType: 'chromium' } },
